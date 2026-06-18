@@ -25,7 +25,7 @@ terraform {
     }
   }
 
-  # ── Remote state (décommenter pour la prod) ────────────────────────────────
+  # ── Remote state  ────────────────────────────────
   # backend "azurerm" {
   #   resource_group_name  = "rg-tfstate"
   #   storage_account_name = "stsssantetfstate"
@@ -52,7 +52,7 @@ resource "azurerm_resource_group" "main" {
 }
 
 # =============================================================================
-# MODULE · Azure Container Registry
+# Azure Container Registry
 # =============================================================================
 module "acr" {
   source = "./modules/acr"
@@ -65,7 +65,7 @@ module "acr" {
 }
 
 # =============================================================================
-# MODULE · Service Principal CI/CD
+# Service Principal CI/CD
 # =============================================================================
 module "service_principal" {
   source = "./modules/service-principal"
@@ -75,7 +75,7 @@ module "service_principal" {
 }
 
 # =============================================================================
-# MODULE · Container Apps (frontend + backend + PostgreSQL)
+# Container Apps (frontend + backend + PostgreSQL)
 # =============================================================================
 module "container_apps" {
   source = "./modules/container-apps"

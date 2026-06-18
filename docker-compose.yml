@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml — Sanctuaire Santé (développement local)
+# docker-compose.yml — Sanctuaire Santé 
 # Orchestration : frontend + backend + PostgreSQL
 # =============================================================================
 
