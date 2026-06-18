@@ -1,18 +1,15 @@
 # =============================================================================
-# Dockerfile backend — Sanctuaire Santé
-# Multi-stage : deps → production
+# Dockerfile backend Sanctuaire Sante (etat initial fourni avec des modifications)
 # =============================================================================
-
-# ── Stage 1 : installation des dépendances ───────────────────────────────────
-FROM node:20-alpine AS deps          # FIX : "AS deps" manquait → COPY --from=deps crashait
+FROM node:20-alpine
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
 
+# Installation des dépendances
 RUN npm ci --omit=dev --frozen-lockfile
 
-# ── Stage 2 : image de production ────────────────────────────────────────────
 FROM node:20-alpine AS production
 
 ENV NODE_ENV=production
@@ -20,10 +17,10 @@ ENV PORT=3000
 
 WORKDIR /app
 
-# Utilisateur non-root (bonne pratique sécu)
+# Utilisateur non-root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copie des node_modules depuis le stage deps
+# Copie des node_modules
 COPY --from=deps /app/node_modules ./node_modules
 
 COPY src/ ./src/
