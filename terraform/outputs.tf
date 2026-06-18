@@ -10,7 +10,7 @@ locals {
 }
 
 # =============================================================================
-# OUTPUTS — Valeurs à stocker dans GitHub Actions Secrets après terraform apply
+# OUTPUTS 
 # =============================================================================
 
 output "resource_group_name" {
