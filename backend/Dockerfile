@@ -1,21 +1,38 @@
 # =============================================================================
-# Dockerfile backend Sanctuaire Sante (etat initial fourni)
+# Dockerfile backend Sanctuaire Sante (etat initial fourni avec des modifications)
 # =============================================================================
-# Ce Dockerfile est volontairement minimaliste et non optimise.
-# Il fonctionne, mais il presente plusieurs defauts qu'il vous appartient
-# d'identifier et de corriger dans le cadre de l'epreuve.
-# =============================================================================
-
-FROM node:20
+FROM node:20-alpine
 
 WORKDIR /app
 
-# On copie tout le contexte avant d'installer les dependances.
-COPY . .
+COPY package.json package-lock.json* ./
 
-# On installe l'ensemble des dependances (production + dev).
-RUN npm install
+# Installation des dépendances
+RUN npm ci --omit=dev --frozen-lockfile
+
+FROM node:20-alpine AS production
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+WORKDIR /app
+
+# Utilisateur non-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copie des node_modules
+COPY --from=deps /app/node_modules ./node_modules
+
+COPY src/ ./src/
+COPY package.json ./
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
 
 CMD ["node", "src/index.js"]

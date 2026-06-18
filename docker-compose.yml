@@ -1,0 +1,80 @@
+# =============================================================================
+# docker-compose.yml — Sanctuaire Santé (développement local)
+# Orchestration : frontend + backend + PostgreSQL
+# =============================================================================
+
+services:
+
+  # ───────────────────────────────────────────
+  # Base de données PostgreSQL
+  # ───────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: sanctuaire-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PGUSER:-sanctuaire}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-sanctuaire}
+      POSTGRES_DB: ${PGDATABASE:-sanctuaire}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"          
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-sanctuaire} -d ${PGDATABASE:-sanctuaire}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────
+  # Backend 
+  # ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sanctuaire-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PGHOST: db                
+      PGPORT: 5432
+      PGUSER: ${PGUSER:-sanctuaire}
+      PGPASSWORD: ${PGPASSWORD:-sanctuaire}
+      PGDATABASE: ${PGDATABASE:-sanctuaire}
+    ports:
+      - "3000:3000"             
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  # ───────────────────────────────────────────
+  # Frontend 
+  # ───────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sanctuaire-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+# ───────────────────────────────────────────
+# Volumes persistants
+# ───────────────────────────────────────────
+volumes:
+  pg_data:
+    driver: local
